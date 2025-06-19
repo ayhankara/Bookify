@@ -3,6 +3,7 @@ using Bookify.Application.Abstractions.Clock;
 using Bookify.Application.Abstractions.Data;
 using Bookify.Application.Abstractions.Email;
 using Bookify.Domain.Abstractions;
+using Bookify.Domain.Apartments;
 using Bookify.Domain.Bookings;
 using Bookify.Domain.Users;
 using Bookify.Infrastructure.Clock;
@@ -25,7 +26,7 @@ public static class DependencyInjection
  
         services.AddTransient<IEmailService, EmailService>();
 
-        var connectionString = configuration.GetConnectionString("DefaultConnection")??
+        var connectionString = configuration.GetConnectionString("Database") ??
                                throw new ArgumentException(nameof(configuration));
 
         services.AddDbContext<ApplicationDbContext>(options =>
@@ -34,7 +35,7 @@ public static class DependencyInjection
 
         });
         services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IBookingRepository, BookingRepository>();
+        services.AddScoped<IApartmentRepository, ApartmentRepository>();
         services.AddScoped<IBookingRepository,BookingRepository>(); 
         services.AddScoped<IUnitOfWork>(x=>x.GetRequiredService<ApplicationDbContext>());
 

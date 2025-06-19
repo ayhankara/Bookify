@@ -38,16 +38,16 @@ namespace Bookify.Api.Controllers.Bookings
                 request.UserId,
                 request.StartDate,
                 request.EndDate
-            );
+            ); 
+            Result<Guid> result = await _sender.Send(command, cancellationToken);
 
-
-            var result = await _sender.Send(command, cancellationToken);
-            if (result.)
+            if (result.IsFailure)
             {
                 return BadRequest(result.Error);
             }
 
+            return CreatedAtAction(nameof(GetBooking), new { id = result.Value }, result.Value);
         }
-
+         
     }
 }

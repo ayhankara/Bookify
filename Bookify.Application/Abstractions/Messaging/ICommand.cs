@@ -3,16 +3,14 @@ using MediatR;
 
 namespace Bookify.Application.Abstractions.Messaging;
 
-public interface ICommand :IRequest<Result>
+public interface ICommand : IRequest<Result>, IBaseCommand
 {
-    
-}
-public interface ICommand<TResponse> : IRequest<Result<TResponse>>,IBaseCommand
-{
-    
 }
 
-public interface IBaseCommand : ICommand
+public interface ICommand<TReponse> : IRequest<Result<TReponse>>, IBaseCommand
 {
+}
 
+public interface IBaseCommand
+{
 }
