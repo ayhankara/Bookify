@@ -21,6 +21,11 @@ public sealed class Apartment : Entity
         Amenities = amenities ?? throw new ArgumentNullException(nameof(amenities));
 
     }
+
+    private Apartment()
+    {
+
+    }
     public Name Name { get; private set; }
     public Description Description { get; private set; }
     public Adress Adress { get; private set; }

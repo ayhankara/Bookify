@@ -38,11 +38,11 @@ public class SearchApartmentsQueryHandler : IQueryHandler<SearchApartmentsQuery,
                                a.description AS Description,
                                a.price_amount AS Price,
                                a.price_currency AS Currency,
-                               a.address_country AS Country,
-                               a.address_state AS State,
-                               a.address_zip_code AS ZipCode,
-                               a.address_city AS City,
-                               a.address_street AS Street
+                               a.adress_country AS Country,
+                               a.adress_state AS State,
+                               a.adress_zip_code AS ZipCode,
+                               a.adress_city AS City,
+                               a.adress_street AS Street
                            FROM apartments AS a
                            WHERE NOT EXISTS
                            (

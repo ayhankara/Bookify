@@ -16,6 +16,10 @@ public sealed class User : Entity
         Email = email ?? throw new ArgumentNullException(nameof(email));
 
     }
+    private User()
+    {
+
+    }
 
     public FirstName FirstName { get; set; }
     public LastName LastName { get; set; }
