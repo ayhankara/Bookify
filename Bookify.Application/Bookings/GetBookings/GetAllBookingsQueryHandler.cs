@@ -1,9 +1,10 @@
 ﻿using Bookify.Application.Abstractions.Data;
 using Bookify.Application.Abstractions.Messaging;
+using Bookify.Application.Bookings.GetBookings;
 using Bookify.Domain.Bookings;
 using Dapper;
 
-namespace Bookify.Application.Bookings.GetBooking;
+namespace Bookify.Application.Bookings.GetBookings;
 
 internal sealed class GetAllBookingsQueryHandler : IQueryHandler<GetAllBookingsQuery, BookingResponse>
 {

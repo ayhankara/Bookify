@@ -1,4 +1,5 @@
-﻿using Bookify.Application.Bookings.GetBooking;
+﻿
+using Bookify.Application.Bookings.GetBookings;
 using Bookify.Application.Bookings.ReserveBooking;
 using Bookify.Domain.Abstractions;
 using MediatR;
@@ -17,13 +18,14 @@ namespace Bookify.Api.Controllers.Bookings
             _sender = sender  ;
         }
 
- 
+
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBooking(Guid id, CancellationToken cancellationToken)
         {
             var query = new GetAllBookingsQuery(id);
 
-            Result<Application.Bookings.GetBooking.BookingResponse> result = await _sender.Send(query, cancellationToken);
+            Result<BookingResponse> result = await _sender.Send(query, cancellationToken);
 
             return result.IsSuccess ? Ok(result.Value) : NotFound();
         }

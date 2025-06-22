@@ -1,10 +1,12 @@
 ﻿using Bookify.Domain.Abstractions;
 using Bookify.Domain.Users.Events;
+using System.Xml.Linq;
 
 namespace Bookify.Domain.Users;
 
 public sealed class User : Entity
 {
+    private readonly List<Role> _roles = new List<Role>();
     public User(Guid id, FirstName firstName, LastName lastName, Email email) 
         : base(id)
     {
@@ -27,8 +29,12 @@ public sealed class User : Entity
     {
         var user = new User(Guid.NewGuid(), firstName, lastName, email);
         user.RaiseDomainEvent(new UserCreatedDomainEvent(user.Id));
+
+        user._roles.Add(Role.Registered);
         return user;
     }
+    public IReadOnlyCollection<Role> Roles => _roles.ToList();
+
 
     public string IdentityId { get; private set; } = string.Empty;
     public void SetIdentityId(string identityId)

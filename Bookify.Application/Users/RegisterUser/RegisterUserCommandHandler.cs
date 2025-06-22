@@ -30,6 +30,7 @@ public sealed class RegisterUserCommandHandler : ICommandHandler<RegisterUserCom
           );
 
        var identityId = await _authhenticationService.RegisterAsync(user, request.Password, cancellationToken);
+
        user.SetIdentityId(identityId);
 
        _userRepository.Add(user);

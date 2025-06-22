@@ -15,7 +15,11 @@ internal sealed class JwtBearerOptionsSetup :IConfigureNamedOptions<JwtBearerOpt
        options.Audience = _authenticationOptions.Audience;
        options.MetadataAddress = _authenticationOptions.MetadataUrl;
        options.RequireHttpsMetadata = _authenticationOptions.RequireHttpsMetadata;
-       options.TokenValidationParameters.ValidIssuer = _authenticationOptions.Issuer;
+       options.TokenValidationParameters.ValidIssuer = _authenticationOptions.ValidIssuer;
+       options.TokenValidationParameters.ValidateIssuer = true;
+       options.TokenValidationParameters.ValidateAudience = true;
+       options.TokenValidationParameters.ValidateLifetime = true;
+       options.TokenValidationParameters.ValidateIssuerSigningKey = true;
 
     }
     public void Configure(string? name, JwtBearerOptions options) => Configure(options);

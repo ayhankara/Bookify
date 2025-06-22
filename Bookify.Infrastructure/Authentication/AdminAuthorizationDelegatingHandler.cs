@@ -1,4 +1,4 @@
-﻿using Bookify.Infrastructure.Authentication.Models;
+using Bookify.Infrastructure.Authentication.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using System.Net.Http.Headers;
@@ -7,11 +7,8 @@ using System.Net.Http.Json;
 namespace Bookify.Infrastructure.Authentication
 {
     public sealed class AdminAuthorizationDelegatingHandler : DelegatingHandler
-
-
     {
         private readonly KeycloakOptions _keycloakOptions;
-
 
         public AdminAuthorizationDelegatingHandler(IOptions<KeycloakOptions> keycloakOptions)
         {
@@ -42,6 +39,17 @@ namespace Bookify.Infrastructure.Authentication
                 Console.WriteLine($"Request URI: {request.RequestUri}");
                 Console.WriteLine($"Request Method: {request.Method}");
                 Console.WriteLine($"Status Code: {ex.StatusCode}");
+                
+                // 403 hatası için özel loglama
+                if (ex.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    Console.WriteLine("403 Forbidden Error - Admin client yetki sorunu");
+                    Console.WriteLine("Keycloak'ta admin client'ın realm-management rollerini kontrol edin:");
+                    Console.WriteLine("- manage-users");
+                    Console.WriteLine("- view-users");
+                    Console.WriteLine("- query-users");
+                }
+                
                 throw;
             }
             catch (Exception ex)
@@ -57,7 +65,7 @@ namespace Bookify.Infrastructure.Authentication
             {
                 new("client_id", _keycloakOptions.AdminClientId),
                 new("client_secret", _keycloakOptions.AdminClientSecret),
-                new("scope", "openid email profile"),
+                new("scope", "openid email profile roles"),
                 new("grant_type", "client_credentials")
             };
 
@@ -76,10 +84,8 @@ namespace Bookify.Infrastructure.Authentication
 
             authorizationResponse.EnsureSuccessStatusCode();
 
-
             return await authorizationResponse.Content.ReadFromJsonAsync<AuthorizationToken>(cancellationToken) ??
                    throw new ApplicationException();
         }
     }
-
-}
+} 

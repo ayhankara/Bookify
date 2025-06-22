@@ -1,11 +1,13 @@
 ﻿using Bookify.Application.Abstractions.Data;
 using Bookify.Application.Abstractions.Messaging;
+using Bookify.Domain.Abstractions;
 using Bookify.Domain.Bookings;
 using Dapper;
 
 namespace Bookify.Application.Apartments.SearchApartments;
 
-public class SearchApartmentsQueryHandler : IQueryHandler<SearchApartmentsQuery, IReadOnlyList<ApartmentResponse>>
+internal sealed class SearchApartmentsQueryHandler
+    : IQueryHandler<SearchApartmentsQuery, IReadOnlyList<ApartmentResponse>>
 {
 
     private static readonly int[] ActiveBookingStatuses =

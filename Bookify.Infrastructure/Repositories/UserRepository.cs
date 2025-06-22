@@ -9,5 +9,15 @@ internal sealed class UserRepository : Repository<User>, IUserRepository
     {
     }
  
+    public override void Add(User entity)
+    {
+        foreach (var role in entity.Roles)
+        {
+            dbContext.Attach(role);
+
+        }
+
+        dbContext.Add(entity);
+    }
 
 }

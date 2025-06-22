@@ -1,68 +1,62 @@
-﻿using Bookify.Application.Exceptions;
+﻿using Bookify.Application.Abstractions.Clock;
+using Bookify.Application.Abstractions.Data;
+using Bookify.Application.Exceptions;
 using Bookify.Domain.Abstractions;
+using Bookify.Domain.Apartments;
+using Bookify.Domain.Bookings;
+using Bookify.Domain.Reviews;
+using Bookify.Domain.Users;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-
+using Newtonsoft.Json;
 namespace Bookify.Infrastructure;
 
-public sealed class ApplicationDbContext : DbContext,IUnitOfWork
+public sealed class ApplicationDbContext : DbContext, IUnitOfWork, IApplicationDbContext
 {
-    private readonly IPublisher _publisher;
-
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IPublisher publisher) : base(options)
+    private static readonly JsonSerializerSettings JsonSerializerSettings = new()
     {
-        _publisher = publisher;
+        TypeNameHandling = TypeNameHandling.All
+    };
+
+    private readonly IDateTimeProvider _dateTimeProvider;
+
+    public DbSet<Apartment> Apartments { get; private set; }
+
+    public DbSet<Booking> Bookings { get; private set; }
+
+    public DbSet<Review> Reviews { get; private set; }
+
+    public DbSet<User> Users { get; private set; }
+
+    public ApplicationDbContext(
+        DbContextOptions options,
+        IDateTimeProvider dateTimeProvider)
+        : base(options)
+    {
+        _dateTimeProvider = dateTimeProvider;
     }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+
+        base.OnModelCreating(modelBuilder);
     }
 
-   public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        var result = await base.SaveChangesAsync(cancellationToken);
-
-
-        return result;
-    }
-
-   private async Task PublishDomainEventsAsync(CancellationToken cancellationToken = default)
-   {
-       var domainEntities = ChangeTracker
-           .Entries<Entity>()
-           .Select(e => e.Entity)
-           .SelectMany(entry =>
-           {
-               var domainEvents = entry.GetDomainEvents();
-               entry.ClearDomainEvents();
-               return domainEvents;
-
-           }).ToList();
-
-       foreach (var domainEntity in domainEntities)
-       {
-           await _publisher.Publish(domainEntity, cancellationToken);
-        }
-
-
-    }
-    public async Task<int> SaveChangesWithDomainEventsAsync(CancellationToken cancellationToken = default)
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            var result = await SaveChangesAsync(cancellationToken);
-            await PublishDomainEventsAsync(cancellationToken);
-        
+            
+            int result = await base.SaveChangesAsync(cancellationToken);
 
             return result;
         }
-        catch (DbUpdateConcurrencyException e)
+        catch (DbUpdateConcurrencyException ex)
         {
-            Console.WriteLine(e);
-            throw new ConcurrencyException("Concurrency exception occurred.", e);
+            throw new ConcurrencyException("Concurrency exception occurred.", ex);
         }
     }
 
+  
 }
- 

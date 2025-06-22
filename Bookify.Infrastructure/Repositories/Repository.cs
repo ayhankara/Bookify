@@ -16,7 +16,7 @@ where T: Entity
         return await dbContext.Set<T>().FindAsync(new object[] { id }, cancellationToken);
     }
 
-    public void Add(T entity)
+    public virtual void Add(T entity)
     {
         dbContext.Add(entity);
     }
