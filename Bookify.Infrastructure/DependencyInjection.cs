@@ -45,10 +45,10 @@ public static class DependencyInjection
         services.AddHttpClient<IAuthenticationService, AuthenticationService>((serviceProvider, httpClient) =>
         {
             var keycloakOptions = serviceProvider.GetRequiredService<IOptions<KeycloakOptions>>().Value;
-
             httpClient.BaseAddress = new Uri(keycloakOptions.AdminUrl);
-        })
-        .AddHttpMessageHandler<AdminAuthorizationDelegatingHandler>();
+            httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+        }).AddHttpMessageHandler<AdminAuthorizationDelegatingHandler>();
+
 
         return services;
     }
