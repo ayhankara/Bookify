@@ -161,7 +161,7 @@ namespace Bookify.Infrastructure.Migrations
                     b.ToTable("reviews", (string)null);
                 });
 
-            modelBuilder.Entity("Bookify.Domain.Users.Permision", b =>
+            modelBuilder.Entity("Bookify.Domain.Users.Permission", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -176,9 +176,16 @@ namespace Bookify.Infrastructure.Migrations
                         .HasColumnName("name");
 
                     b.HasKey("Id")
-                        .HasName("pk_permision");
+                        .HasName("pk_permissions");
 
-                    b.ToTable("permision", (string)null);
+                    b.ToTable("permissions", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "users:read"
+                        });
                 });
 
             modelBuilder.Entity("Bookify.Domain.Users.Role", b =>
@@ -210,19 +217,15 @@ namespace Bookify.Infrastructure.Migrations
 
             modelBuilder.Entity("Bookify.Domain.Users.RolePermission", b =>
                 {
-                    b.Property<int>("PermissionsId")
+                    b.Property<int>("PermissionId")
                         .HasColumnType("integer")
-                        .HasColumnName("permissions_id");
+                        .HasColumnName("permission_id");
 
                     b.Property<int>("RoleId")
                         .HasColumnType("integer")
                         .HasColumnName("role_id");
 
-                    b.Property<int>("PermissionId")
-                        .HasColumnType("integer")
-                        .HasColumnName("permission_id");
-
-                    b.HasKey("PermissionsId", "RoleId")
+                    b.HasKey("PermissionId", "RoleId")
                         .HasName("pk_role_permission");
 
                     b.HasIndex("RoleId")
@@ -571,12 +574,12 @@ namespace Bookify.Infrastructure.Migrations
 
             modelBuilder.Entity("Bookify.Domain.Users.RolePermission", b =>
                 {
-                    b.HasOne("Bookify.Domain.Users.Permision", null)
+                    b.HasOne("Bookify.Domain.Users.Permission", null)
                         .WithMany()
-                        .HasForeignKey("PermissionsId")
+                        .HasForeignKey("PermissionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_role_permission_permision_permissions_id");
+                        .HasConstraintName("fk_role_permission_permissions_permission_id");
 
                     b.HasOne("Bookify.Domain.Users.Role", null)
                         .WithMany()

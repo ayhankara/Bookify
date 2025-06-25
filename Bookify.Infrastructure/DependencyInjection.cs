@@ -1,6 +1,8 @@
 ﻿using System.Reflection;
 using System.Security.Claims;
+using Asp.Versioning;
 using Bookify.Application.Abstractions.Authentication;
+using Bookify.Application.Abstractions.Caching;
 using Bookify.Application.Abstractions.Clock;
 using Bookify.Application.Abstractions.Data;
 using Bookify.Application.Abstractions.Email;
@@ -10,6 +12,7 @@ using Bookify.Domain.Bookings;
 using Bookify.Domain.Users;
 using Bookify.Infrastructure.Authentication;
 using Bookify.Infrastructure.Authorization;
+using Bookify.Infrastructure.Caching;
 using Bookify.Infrastructure.Clock;
 using Bookify.Infrastructure.Data;
 using Bookify.Infrastructure.Email;
@@ -17,6 +20,7 @@ using Bookify.Infrastructure.Repositories;
 using Dapper;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,7 +37,7 @@ public static class DependencyInjection
          IConfiguration configuration)
     {
         services.AddTransient<IDateTimeProvider, DateTimeProvider>();
- 
+
         services.AddTransient<IEmailService, EmailService>();
 
         AddPersistance(services, configuration);
@@ -41,6 +45,9 @@ public static class DependencyInjection
         AddAuthentication(services, configuration);
 
         AddAuthorization(services);
+        AddCaching(services,configuration);
+        AddHealthChecks(services, configuration);
+        AddApiVersioning(services);
         return services;
     }
 
@@ -67,9 +74,9 @@ public static class DependencyInjection
         {
             var keycloakOptions = serviceProvider.GetRequiredService<IOptions<KeycloakOptions>>().Value;
             httpClient.BaseAddress = new Uri(keycloakOptions.TokenUrl);
-      
-        }); 
-        
+
+        });
+
         services.AddHttpContextAccessor();
 
         services.AddScoped<IUserContext, UserContext>();
@@ -87,8 +94,8 @@ public static class DependencyInjection
         });
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IApartmentRepository, ApartmentRepository>();
-        services.AddScoped<IBookingRepository,BookingRepository>(); 
-        services.AddScoped<IUnitOfWork>(x=>x.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IBookingRepository, BookingRepository>();
+        services.AddScoped<IUnitOfWork>(x => x.GetRequiredService<ApplicationDbContext>());
 
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
 
@@ -100,12 +107,38 @@ public static class DependencyInjection
 
     private static void AddAuthorization(IServiceCollection services)
     {
-       services.AddScoped<AuthorizationService>();
+        services.AddScoped<AuthorizationService>();
         services.AddTransient<IClaimsTransformation, CustomClaimsTransformation>();
-        services.AddAuthorization(options =>
+        services.AddTransient<IAuthorizationHandler, PermissionAuthorizationHandler>();
+        services.AddTransient<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>();
+    }
+
+    private static void AddCaching(IServiceCollection services,IConfiguration configuration)
+    {
+        var connectionstring = configuration.GetConnectionString("Cache") ??
+                                throw new ArgumentException(nameof(configuration));
+        services.AddStackExchangeRedisCache(options =>options.Configuration= connectionstring);
+        services.AddSingleton<ICacheService, CacheService>();
+    }
+    private static void AddHealthChecks(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddHealthChecks()
+            .AddNpgSql(configuration.GetConnectionString("Database")!)
+            .AddRedis(configuration.GetConnectionString("Cache")!)
+            .AddUrlGroup(new Uri(configuration["KeyCloak:BaseUrl"]!), HttpMethod.Get, "keycloak");
+    }
+
+    private static void AddApiVersioning(IServiceCollection services)
+    {
+        services.AddApiVersioning(options =>
         {
-            options.AddPolicy("AdminOnly", policy => policy.RequireClaim(ClaimTypes.Role, "admin"));
-            options.AddPolicy("UserOnly", policy => policy.RequireClaim(ClaimTypes.Role, "user"));
+            options.ReportApiVersions = true;
+            options.ApiVersionReader = new UrlSegmentApiVersionReader();
+            options.DefaultApiVersion = new ApiVersion(1, 0);
+        }).AddMvc().AddApiExplorer(opt =>
+        {
+            opt.GroupNameFormat= "'v'VVV";
+            opt.SubstituteApiVersionInUrl = true;
         });
     }
 }

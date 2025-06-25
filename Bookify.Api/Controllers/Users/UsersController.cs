@@ -1,7 +1,9 @@
-﻿using Bookify.Application.Users.GetLoggedInUser;
+﻿using Asp.Versioning;
+using Bookify.Application.Users.GetLoggedInUser;
 using Bookify.Application.Users.LoginUser;
 using Bookify.Application.Users.RegisterUser;
 using Bookify.Domain.Abstractions;
+using Bookify.Infrastructure.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -9,7 +11,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Bookify.Api.Controllers.Users;
 
-[Route("api/users")]
+[ApiVersion(ApiVersions.V1)]
+[Route("api/v{version:apiVersion}/users")]
 [ApiController]
 public class UsersController : ControllerBase
 {
@@ -58,12 +61,23 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet("me")]
-    [Authorize(Roles = Roles.Registered)]
-    public async Task<IActionResult> GetLoggedInUser(CancellationToken cancellationToken)
+    [MapToApiVersion(ApiVersions.V1)]
+    [HasPermission(Permisions.UsersRead)]
+    public async Task<IActionResult> GetLoggedInUserV1(CancellationToken cancellationToken)
     {
        var query = new GetLoggedInUserQuery();
        Result<UserResponse> result = await _sender.Send(query,cancellationToken);
        return Ok(result.Value);
-    }   
+    }
+
+    [HttpGet("me")]
+    [MapToApiVersion(ApiVersions.V2)]
+    [HasPermission(Permisions.UsersRead)]
+    public async Task<IActionResult> GetLoggedInUserV2(CancellationToken cancellationToken)
+    {
+        var query = new GetLoggedInUserQuery();
+        Result<UserResponse> result = await _sender.Send(query, cancellationToken);
+        return Ok(result.Value);
+    }
 }
 

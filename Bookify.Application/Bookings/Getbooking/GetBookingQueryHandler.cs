@@ -1,46 +1,56 @@
 ﻿using Bookify.Application.Abstractions.Authentication;
 using Bookify.Application.Abstractions.Data;
 using Bookify.Application.Abstractions.Messaging;
+using Bookify.Application.Bookings.GetBooking;
 using Bookify.Domain.Abstractions;
-using Bookify.Domain.Bookings;
-using Microsoft.EntityFrameworkCore;
+using Dapper;
 
-namespace Bookify.Application.Bookings.GetBooking;
+namespace Bookify.Application.Bookings.Getbooking;
+
 
 internal sealed class GetBookingQueryHandler : IQueryHandler<GetBookingQuery, BookingResponse>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ISqlConnectionFactory _sqlConnectionFactory;
     private readonly IUserContext _userContext;
 
-    public GetBookingQueryHandler(IApplicationDbContext context, IUserContext userContext)
-    {
-        _context = context;
+    public GetBookingQueryHandler(IUserContext userContext, ISqlConnectionFactory sqlConnectionFactory)
+    { 
         _userContext = userContext;
+        _sqlConnectionFactory = sqlConnectionFactory;
     }
 
-    public async Task<BookingResponse> Handle(GetBookingQuery request, CancellationToken cancellationToken)
+    public async Task<Result<BookingResponse>> Handle(GetBookingQuery request, CancellationToken cancellationToken)
     {
-        BookingResponse? booking = await _context.Bookings
-            .Where(b => b.Id == request.BookingId)
-            .Select(b => new BookingResponse
+        using var connection = _sqlConnectionFactory.CreateConnection();
+
+        const string sql = """
+                           SELECT                         
+                           id AS Id,                   
+                           apartment_id AS ApartmentId,     
+                           user_id AS UserId,               
+                           status AS Status,               
+                           price_for_period_amount AS PriceAmount,  
+                           price_for_period_currency AS PriceCurrency,      
+                           cleaing_fee_amount AS CleaningFeeAmount,         
+                           cleaing_fee_currency AS CleaningFeeCurrency,    
+                           amenities_up_charge_amount AS AmenitiesUpChargeAmount,    
+                           amenities_up_charge_currency AS AmenitiesUpChargeCurrency,    
+                           total_price_amount AS TotalPriceAmount,                     
+                           total_price_currency AS TotalPriceCurrency,                 
+                           duration_start AS DurationStart,                      
+                           duration_end AS DurationEnd,                      
+                           create_on_utc AS CreatedOnUtc                   
+                           FROM bookings 
+                           WHERE id = @BookingId
+                           """;
+
+        var booking = await connection.QueryFirstOrDefaultAsync<BookingResponse>(
+            sql,
+            new
             {
-                Id = b.Id,
-                ApartmentId = b.ApartmentId,
-                UserId = b.UserId,
-                Status = (int)b.Status,
-                PriceAmount = b.PriceForPeriod.Amount,
-                PriceCurrency = b.PriceForPeriod.Currency.Code,
-                CleaningFeeAmount = b.CleaningFee.Amount,
-                CleaningFeeCurrency = b.CleaningFee.Currency.Code,
-                AmenitiesUpChargeAmount = b.AmenitiesUpCharge.Amount,
-                AmenitiesUpChargeCurrency = b.AmenitiesUpCharge.Currency.Code,
-                TotalPriceAmount = b.TotalPrice.Amount,
-                TotalPriceCurrency = b.TotalPrice.Currency.Code,
-                DurationStart = b.Duration.Start,
-                DurationEnd = b.Duration.End,
-                CreatedOnUtc = b.CreatedOnUtc
-            })
-            .FirstOrDefaultAsync(cancellationToken);
+                request.BookingId
+            });
 
         if (booking is null || booking.UserId != _userContext.UserId)
         {

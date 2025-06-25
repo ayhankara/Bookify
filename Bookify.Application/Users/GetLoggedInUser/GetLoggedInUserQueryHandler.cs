@@ -20,7 +20,7 @@ internal sealed class GetLoggedInUserQueryHandler
         _userContext = userContext;
     }
 
-    public async Task<UserResponse> Handle(
+    public async Task<Result<UserResponse>> Handle(
         GetLoggedInUserQuery request,
         CancellationToken cancellationToken)
     {

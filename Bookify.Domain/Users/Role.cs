@@ -1,4 +1,6 @@
-﻿namespace Bookify.Domain.Users;
+﻿using System.Security;
+
+namespace Bookify.Domain.Users;
 
 public sealed class Role
 {
@@ -14,5 +16,5 @@ public sealed class Role
 
     public ICollection<User> Users { get; init; } = new List<User>();
 
-    public ICollection<Permision> Permissions { get; init; } = new List<Permision>();
+    public ICollection<Permission> Permissions { get; init; } = new List<Permission>();
 }

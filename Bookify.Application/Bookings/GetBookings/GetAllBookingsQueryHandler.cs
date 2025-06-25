@@ -1,7 +1,6 @@
 ﻿using Bookify.Application.Abstractions.Data;
 using Bookify.Application.Abstractions.Messaging;
-using Bookify.Application.Bookings.GetBookings;
-using Bookify.Domain.Bookings;
+using Bookify.Domain.Abstractions;
 using Dapper;
 
 namespace Bookify.Application.Bookings.GetBookings;
@@ -15,26 +14,26 @@ internal sealed class GetAllBookingsQueryHandler : IQueryHandler<GetAllBookingsQ
         _sqlConnectionFactory = sqlConnectionFactory;
     }
 
-    public async Task<BookingResponse> Handle(GetAllBookingsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<BookingResponse>> Handle(GetAllBookingsQuery request, CancellationToken cancellationToken)
     {
         using  var connection = _sqlConnectionFactory.CreateConnection();
 
         const string sql = @"SELECT
-                        id AS Id,
+                      id AS Id,
                         apartment_id AS ApartmentId,
                         user_id AS UserId,
                         status AS Status,
                         price_for_period_amount AS PriceAmount,
-                        price_for_period_currency AS PriceCurrency,
-                        cleaning_fee_amount AS CleaningFeeAmount,
-                        cleaning_fee_currency AS CleaningFeeCurrency,
+                        price_for_period_currency AS PriceCurrency, 
+                        cleaing_fee_amount AS CleaningFeeAmount, 
+                        cleaing_fee_currency AS CleaningFeeCurrency,
                         amenities_up_charge_amount AS AmenitiesUpChargeAmount,
                         amenities_up_charge_currency AS AmenitiesUpChargeCurrency,
                         total_price_amount AS TotalPriceAmount,
                         total_price_currency AS TotalPriceCurrency,
                         duration_start AS DurationStart,
-                        duration_end AS DurationEnd,
-                        created_on_utc AS CreatedOnUtc
+                        duration_end AS DurationEnd, 
+                        create_on_utc AS CreatedOnUtc
                     FROM bookings
                     WHERE id = @BookingId;";
 

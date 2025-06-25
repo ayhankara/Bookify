@@ -25,7 +25,7 @@ internal sealed class SearchApartmentsQueryHandler
         _sqlConnectionFactory = sqlConnectionFactory;
     }
 
-    public async Task<IReadOnlyList<ApartmentResponse>> Handle(SearchApartmentsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<IReadOnlyList<ApartmentResponse>> >Handle(SearchApartmentsQuery request, CancellationToken cancellationToken)
     {
         if (request.StartDate > request.EndDate)
         {

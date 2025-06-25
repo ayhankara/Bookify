@@ -1,9 +1,9 @@
 ﻿namespace Bookify.Domain.Users;
 
-public sealed class Permision
+public sealed class Permission
 {
-    public static readonly Permision UsersRead = new(1, "users:read");
-    public Permision(int id, string name)
+    public static readonly Permission UsersRead = new(1, "users:read");
+    public Permission(int id, string name)
     {
         Id = id;
         Name = name ?? throw new ArgumentNullException(nameof(name));

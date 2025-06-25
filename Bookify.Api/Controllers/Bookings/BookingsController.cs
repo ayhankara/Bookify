@@ -1,14 +1,20 @@
 ﻿
+using Asp.Versioning;
+using Bookify.Api.Controllers.Users;
+using Bookify.Application.Bookings.GetBooking;
 using Bookify.Application.Bookings.GetBookings;
 using Bookify.Application.Bookings.ReserveBooking;
 using Bookify.Domain.Abstractions;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bookify.Api.Controllers.Bookings
 {
-    [Route("api/bookings")]
+    [Authorize]
+    [ApiVersion(ApiVersions.V1)]
+    [Route("api/v{version:apiVersion}/bookings")]
     [ApiController]
     public class BookingsController : ControllerBase
     {
@@ -23,9 +29,9 @@ namespace Bookify.Api.Controllers.Bookings
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBooking(Guid id, CancellationToken cancellationToken)
         {
-            var query = new GetAllBookingsQuery(id);
+            var query = new GetBookingQuery(id);
 
-            Result<BookingResponse> result = await _sender.Send(query, cancellationToken);
+            Result<Application.Bookings.GetBooking.BookingResponse> result = await _sender.Send(query, cancellationToken);
 
             return result.IsSuccess ? Ok(result.Value) : NotFound();
         }
