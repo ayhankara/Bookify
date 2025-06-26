@@ -6,6 +6,7 @@ using Bookify.Domain.Apartments;
 using Bookify.Domain.Bookings;
 using Bookify.Domain.Reviews;
 using Bookify.Domain.Users;
+using Bookify.Infrastructure.Outbox;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -47,9 +48,9 @@ public sealed class ApplicationDbContext : DbContext, IUnitOfWork, IApplicationD
     {
         try
         {
-            
+            AddDomainEventsAsOutBoxMessages();
             int result = await base.SaveChangesAsync(cancellationToken);
-
+          
             return result;
         }
         catch (DbUpdateConcurrencyException ex)
@@ -57,6 +58,32 @@ public sealed class ApplicationDbContext : DbContext, IUnitOfWork, IApplicationD
             throw new ConcurrencyException("Concurrency exception occurred.", ex);
         }
     }
+    private readonly IPublisher _publisher;
+    private void AddDomainEventsAsOutBoxMessages()
+    {
+        var outboxMessages = ChangeTracker
+            .Entries<Entity>()
+            .Select(e => e.Entity)
+            .SelectMany(e =>
+            {
 
-  
+                var domainEvents = e.GetDomainEvents();
+
+                e.ClearDomainEvents();
+
+                return domainEvents;
+            })
+            .Select(domainEvent => new OutboxMessage(
+                Guid.NewGuid(),
+                _dateTimeProvider.UtcNow,
+                domainEvent.GetType().Name,
+                JsonConvert.SerializeObject(domainEvent,new JsonSerializerSettings()
+                {
+                    TypeNameHandling = TypeNameHandling.All
+                })))
+            .ToList();
+            AddRange(outboxMessages);
+    }
+    
 }
+
